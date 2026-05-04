@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: TechFlow CI/CD Pipeline
 
 on:
   push:
@@ -52,6 +52,17 @@ jobs:
     needs: build-and-push   
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Copy scripts to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with: 
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "scripts/"
+          target: "/home/${{secrets.EC2_USER}}"
+
       - name: SSH into EC2 and deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -59,11 +70,64 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            export $DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+             
+            # Save current image as rollback target
+            bash /home/${{secrets.EC2_USER}}/scripts/tag_stable.sh
+            # Pull the new image
             docker pull ${{ secrets.DOCKER_USERNAME }}/tech-flow:latest
+            # Replace the running container
             docker stop tech-flow || true
             docker rm tech-flow || true
-            docker run -d -p 3000:3000 --name tech-flow ${{ secrets.DOCKER_USERNAME }}/tech-flow:latest
+            docker run -d \
+              -p 3000:3000 \
+              --name tech-flow \
+              --restart unless-stopped \
+              ${{ secrets.DOCKER_USERNAME }}/tech-flow:latest
 
-          
+            # Verify deploy succeeded
+            if ! bash /home/${{ secrets.DOCKER_USERNAME }}/scripts/health_check.sh; then
+              echo "Health check failed - triggering rollback"
+              bash /home/${{secrets.DOCKER_USERNAME}}/scripts/rollback.sh
+              exit 1
+            fi
+            echo "Deployment successful "
+
+  notify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Set deploy status message
+        id: status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "STATUS = SUCCESS" >> $GITHUB_OUTPUT
+          else
+            echo "STATUS = FAILED" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Gmail notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_SENDER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          to: ${{ secrets.NOTIFY_EMAIL }}
+          from: TechFlow CI/CD <${{ secrets.GMAIL_SENDER }}>
+          subject: "[${{ steps.status.outputs.STATUS }}] TechFlow Deploy - ${{ github.ref_name }}"
+          html_body: |
+            <h2>🚀 TechFlow Deployment Report</h2>
+            <p><strong>Status:</strong> ${{ steps.status.outputs.STATUS }}</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Author:</strong> ${{ github.actor }}</p>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">
+              View Pipeline Run
+            </a></p>
+
 
       
