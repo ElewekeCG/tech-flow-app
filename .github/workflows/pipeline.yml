@@ -73,7 +73,7 @@ jobs:
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
              
             # Save current image as rollback target
-            bash /home/${{secrets.EC2_USER}}/scripts/tag_stable.sh
+            bash /home/${{ secrets.EC2_USER }}/scripts/tag_stable.sh
             # Pull the new image
             docker pull ${{ secrets.DOCKER_USERNAME }}/tech-flow:latest
             # Replace the running container
@@ -86,9 +86,9 @@ jobs:
               ${{ secrets.DOCKER_USERNAME }}/tech-flow:latest
 
             # Verify deploy succeeded
-            if ! bash /home/${{ secrets.DOCKER_USERNAME }}/scripts/health_check.sh; then
+            if ! bash /home/${{ secrets.EC2_USER }}/scripts/health_check.sh; then
               echo "Health check failed - triggering rollback"
-              bash /home/${{secrets.DOCKER_USERNAME}}/scripts/rollback.sh
+              bash /home/${{ secrets.EC2_USER }}/scripts/rollback.sh
               exit 1
             fi
             echo "Deployment successful "

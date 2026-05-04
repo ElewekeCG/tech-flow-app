@@ -5,7 +5,7 @@ if [ -z "$DOCKER_USERNAME" ]; then
     exit 1
 fi
 
-if ! docker inspect tech-flow > /dev/null 2>$1; then
+if ! docker inspect tech-flow > /dev/null 2>&1; then
     echo "No running container found - skipping tag_stable step."
     exit 0
 fi
