@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$DOCKER_USERNAME" ]; then
-    echo "ERROR: DOCKERHUB_USERNAME env variable is not set"
+    echo "ERROR: DOCKER_USERNAME env variable is not set"
     exit 1
 fi
 

@@ -61,7 +61,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "./scripts/"
-          target: "/home/${{secrets.EC2_USER}}"
+          target: "/home/${{secrets.EC2_USER}}/"
 
       - name: SSH into EC2 and deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -70,7 +70,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            export $DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
              
             # Save current image as rollback target
             bash /home/${{secrets.EC2_USER}}/scripts/tag_stable.sh
