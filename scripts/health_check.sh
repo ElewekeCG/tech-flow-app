@@ -12,7 +12,7 @@ for ((i=1; i<=MAX_TRIES; i++)); do
   HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || echo "000")
   echo "recieved status: '$HTTP_STATUS'"
 
-  if [[ "HTTP_STATUS" =~ ^[0-9]+$ ]] && ["HTTP_STATUS" -eq 200 ]; then
+  if [ "HTTP_STATUS" -eq 200 ]; then
     echo "Health check passed"
     exit 0
   fi
