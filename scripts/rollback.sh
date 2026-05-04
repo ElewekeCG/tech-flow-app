@@ -2,9 +2,13 @@
 
 echo "initiating rollback.."
 
+if ! sudo docker pull $DOCKER_USERNAME/tech-flow:previous; then
+  echo "No previous image found, skipping rollback"
+  exit 1
+fi
 docker stop tech-flow || true
 docker rm tech-flow || true
-docker pull "$DOCKER_USERNAME/tech-flow:previous_stable"
+# docker pull "$DOCKER_USERNAME/tech-flow:previous_stable"
 
 docker run -d  \
     -p 3000:3000 \
