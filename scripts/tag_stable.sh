@@ -12,6 +12,6 @@ fi
 
 CURRENT_IMAGE=$(docker inspect --format='{{ .config.image }}' tech-flow)
 docker tag $CURRENT_IMAGE "$DOCKER_USERNAME/tech-flow:previous_stable"
-docker $DOCKER_USERNAME/tech-flow:previous_stable
+docker push $DOCKER_USERNAME/tech-flow:previous_stable
 
 echo "Stable image saved"
