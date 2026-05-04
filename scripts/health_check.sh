@@ -7,7 +7,7 @@ SLEEP_SECS=5
 for ((i=1; i<=MAX_TRIES; i++)); do
   echo "Attempt $i of $MAX_TRIES..."
   HTTP_STATUS=(curl -s -o /dev/null -w "%{http_code}" "$URL")
-  if [ "HTTP_STATUS" -eq 200]; then
+  if [ "HTTP_STATUS" -eq 200 ]; then
     echo "Health check passed"
     exit 0
   else
